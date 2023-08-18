@@ -19,7 +19,7 @@ def main():
                 result_image = remove(image)
 
                 # Perform OCR on the background-removed image
-                pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+                pytesseract.pytesseract.tesseract_cmd = r'tesseract.exe'
                 extracted_text = pytesseract.image_to_string(result_image)
                 st.text("Extracted Text:")
                 st.text(extracted_text)
