@@ -1,27 +1,43 @@
 import streamlit as st
+from rembg import remove
 from PIL import Image
 import pytesseract
-import os
-import pandas as pd
+import io
 
-st.title('OCR and Data Extraction App')
+def main():
+    st.title("Background Removal and OCR App")
 
-# Path to the Tesseract executable
-tesseract_path = '/app/.apt/usr/bin/tesseract'  # This path works on Streamlit Sharing
+    image_file = st.file_uploader("Upload an image", type=['jpg', 'jpeg', 'png'])
 
-uploaded_file = st.file_uploader('Upload an image', type=['jpg', 'png'])
+    if image_file is not None:
+        image = Image.open(image_file)
+        st.image(image, caption='Original Image', use_column_width=True)
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
+        if st.button("Remove Background and Extract Text"):
+            with st.spinner("Processing..."):
+                # Remove background
+                result_image = remove(image)
 
-    extracted_text = pytesseract.image_to_string(image, config=f'--tessdata-dir {os.path.dirname(tesseract_path)}')
+                # Perform OCR on the background-removed image
+                pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
+                extracted_text = pytesseract.image_to_string(result_image)
+                st.text("Extracted Text:")
+                st.text(extracted_text)
 
-    st.subheader('Extracted Text:')
-    st.write(extracted_text)
+                # Display the background-removed image with extracted text
+                st.image(result_image, caption='Background Removed', use_column_width=True)
 
-    # Process extracted text and display as a DataFrame
-    rows = extracted_text.split('\n')
-    data = [row.split() for row in rows if row.strip()]
-    df = pd.DataFrame(data)
-    st.subheader('Extracted Data:')
-    st.write(df)
+                # Convert the PIL Image to bytes
+                result_image_bytes = io.BytesIO()
+                result_image.save(result_image_bytes, format='PNG')
+                result_image_bytes = result_image_bytes.getvalue()
+
+                # Create a download button for the background-removed image
+                st.download_button(
+                    label="Download Processed Image",
+                    data=result_image_bytes,
+                    file_name="background_removed.png"
+                )
+
+if __name__ == "__main__":
+    main()
